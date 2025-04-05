@@ -18,24 +18,35 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 
 int crear_conexion(char *ip, char* puerto)
 {
+	int err;
+
 	struct addrinfo hints;
 	struct addrinfo *server_info;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+	//esto creo es solo para el server no cliente: hints.ai_flags = AI_PASSIVE;
+	
+	err = getaddrinfo(ip, puerto, &hints, &server_info);
+	
+	// Ahora vamos a crear el socket. 
+	int socket_cliente = socket(server_info->ai_family,server_info->ai_socktype,server_info->ai_protocol);
+	if(err == -1){
+		//Socket creation failed
+		freeaddrinfo(server_info);
+		return -1;
+	}
 
-	getaddrinfo(ip, puerto, &hints, &server_info);
-
-	// Ahora vamos a crear el socket.
-	int socket_cliente = 0;
-
-	// Ahora que tenemos el socket, vamos a conectarlo
-
+	// Ahora que tenemos el socket (fd_conexion), vamos a conectarlo
+	err = connect(socket_cliente, server_info->ai_addr, server_info->ai_addrlen);
+	if(err == -1){
+		//Server connection failed
+		freeaddrinfo(server_info);
+		return -1;
+	}
 
 	freeaddrinfo(server_info);
-
 	return socket_cliente;
 }
 
